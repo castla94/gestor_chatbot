@@ -186,6 +186,7 @@ app.get('/clientes/status', (req, res) => {
         // Ejecutar el comando PM2 y capturar la salida
         const output = execSync('pm2 jlist', { encoding: 'utf-8' });
         const pm2List = JSON.parse(output);
+        console.log('pm2List', pm2List);
 
         // Procesar la salida para devolver una respuesta más amigable
         const formattedList = pm2List.map(proc => ({
