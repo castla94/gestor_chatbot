@@ -141,6 +141,9 @@ app.post('/clientes/stop', async (req, res) => {
         execSync(`pm2 save --force`, {
             stdio: 'inherit'
         });
+        // Eliminar la carpeta bot_sessions
+        execSync(`rm -rf bot_sessions`, { stdio: 'inherit' });
+        
         res.status(200).json({ message: `Cliente ${name} detenido PM2` });
     } catch (error) {
         console.error(error);
