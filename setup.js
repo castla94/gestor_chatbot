@@ -59,6 +59,9 @@ const cloneAndSetupBot = async (client, port) => {
     const pm2Name = `bot-${client.name}`;
     process.chdir(clientPath);
 
+    // Eliminar la carpeta bot_sessions
+    execSync(`rm -rf bot_sessions`, { stdio: 'inherit' });
+
     execSync(`pm2 start app.js --name ${pm2Name}`, {
         stdio: 'inherit'
     });
@@ -143,7 +146,7 @@ app.post('/clientes/stop', async (req, res) => {
         });
         // Eliminar la carpeta bot_sessions
         execSync(`rm -rf bot_sessions`, { stdio: 'inherit' });
-        
+
         res.status(200).json({ message: `Cliente ${name} detenido PM2` });
     } catch (error) {
         console.error(error);
