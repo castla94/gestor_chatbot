@@ -23,7 +23,8 @@ const cloneAndSetupBot = async (client, port) => {
     }
 
     // Copiar la plantilla del proyecto al directorio del cliente
-    fs.cpSync(projectTemplatePath, clientPath, { recursive: true });
+    //fs.cpSync(projectTemplatePath, clientPath, { recursive: true });
+    execSync(`rsync -a ${projectTemplatePath}/ ${clientPath}/`);
 
     // Ruta al archivo .env del cliente (en la raíz de cliente_1, cliente_2, etc.)
     const envPath = path.join(clientPath, '.env');
