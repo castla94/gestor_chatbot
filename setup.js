@@ -68,6 +68,7 @@ const cloneAndSetupBot = async (client, port) => {
         stdio: 'inherit'
     });
     logger.info(`Configuración del bot completada exitosamente`, { client: client.name, port });
+    execSync(`pm2 start gestor_clientes`, { stdio: 'inherit' });
 };
 
 app.post('/clientes/create', async (req, res) => {
@@ -192,6 +193,8 @@ app.post('/clientes/delete', async (req, res) => {
         });
         logger.info('Eliminando directorio del cliente', { clientPath });
         fs.rmSync(clientPath, { recursive: true, force: true });
+
+        execSync(`pm2 start gestor_clientes`, { stdio: 'inherit' });
 
         logger.info('Cliente eliminado exitosamente', { client: name });
         res.status(200).json({ message: `Cliente con ID ${name} eliminado exitosamente.` });
