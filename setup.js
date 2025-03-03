@@ -68,7 +68,10 @@ const cloneAndSetupBot = async (client, port) => {
         stdio: 'inherit'
     });
     logger.info(`Configuración del bot completada exitosamente`, { client: client.name, port });
-    execSync(`pm2 start gestor_clientes`, { stdio: 'inherit' });
+    // Start gestor_clientes after 5 seconds without blocking execution
+    setTimeout(() => {
+        execSync(`pm2 start gestor_clientes`, { stdio: 'inherit' });
+    }, 5000);
 };
 
 app.post('/clientes/create', async (req, res) => {
