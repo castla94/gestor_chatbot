@@ -197,7 +197,10 @@ app.post('/clientes/delete', async (req, res) => {
         logger.info('Eliminando directorio del cliente', { clientPath });
         fs.rmSync(clientPath, { recursive: true, force: true });
 
-        execSync(`pm2 start gestor_clientes`, { stdio: 'inherit' });
+        // Start gestor_clientes after 5 seconds without blocking execution
+        setTimeout(() => {
+            execSync(`pm2 start gestor_clientes`, { stdio: 'inherit' });
+        }, 5000);
 
         logger.info('Cliente eliminado exitosamente', { client: name });
         res.status(200).json({ message: `Cliente con ID ${name} eliminado exitosamente.` });
