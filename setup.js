@@ -279,6 +279,49 @@ app.get('/clientes/logs/:appName', (req, res) => {
     }
 });
 
+
+
+
+app.post('/clientes/bot-conextion', async (req, res) => {
+    const { id, name } = req.body;
+    logger.info('Solicitud estado de conexion', { id, name });
+
+    if (!id || !name) {
+        logger.warn('Faltan parámetros requeridos', { id, name });
+        return res.status(400).json({ error: 'Faltan parámetros (id, name)' });
+    }
+
+    const clientPath = path.join(clientsBasePath, `cliente_${id}`);
+    logger.info('Verificando ruta del cliente', { clientPath });
+
+    if (!fs.existsSync(clientPath)) {
+        logger.warn('Carpeta del cliente no encontrada', { clientPath });
+        return res.status(404).json({ error: `Cliente ${name} no encontrado.` });
+    }
+
+    try {
+        process.chdir(clientPath);
+        // Check if bot_sessions directory exists and count sessions
+        let sessionCount = 0;
+        try {
+            sessionCount = parseInt(execSync('ls -1 bot_sessions/ | wc -l', { encoding: 'utf-8' }).trim());
+            logger.info('Number of files:', { sessionCount });
+        } catch (error) {
+            logger.warn('No bot_sessions directory found or empty');
+        }
+
+        logger.info('Cliente status conexion', { 
+            client: name, 
+            sessionStatus: (sessionCount > 1 ? 'Conectado' : 'Desconectado'),
+        });
+        res.status(200).json({ message: `Cliente ${name} status conexion`,sessionStatus: (sessionCount > 1 ? 'Conectado' : 'Desconectado') });
+    } catch (error) {
+        logger.error('Error status conexion cliente:', { error: error.message, client: name, stack: error.stack });
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 app.listen(serverPort, () => {
     logger.info(`Gestor de clientes corriendo en http://localhost:${serverPort}`);
 });
