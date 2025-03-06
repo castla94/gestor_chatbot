@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const app = express();
 const serverPort = 4000; // Puerto donde correrá el servidor de gestión
+let activeRequests = 0
 
 const projectTemplatePath = path.join(__dirname, '..', 'chat-bot-whatsapp');
 const clientsBasePath = path.join(__dirname, '..', 'clientes_chatbot');
@@ -179,6 +180,8 @@ app.post('/clientes/delete', async (req, res) => {
         return res.status(400).json({ error: 'Faltan parámetros (name)' });
     }
 
+    activeRequests++;
+
     const clientPath = path.join(clientsBasePath, `cliente_${name}`);
     logger.info('Verificando ruta del cliente', { clientPath });
 
@@ -196,14 +199,17 @@ app.post('/clientes/delete', async (req, res) => {
         });
         logger.info('Eliminando directorio del cliente', { clientPath });
         fs.rmSync(clientPath, { recursive: true, force: true });
-
+        logger.info('Cliente eliminado exitosamente', { client: name });
+        activeRequests--;
+        res.status(200).json({ message: `Cliente con ID ${name} eliminado exitosamente.` });
         // Start gestor_clientes after 5 seconds without blocking execution
         setTimeout(() => {
-            execSync(`pm2 start gestor_clientes`, { stdio: 'inherit' });
+            if (activeRequests === 0) {
+                execSync(`pm2 start gestor_clientes`, { stdio: 'inherit' });
+            } else {
+                logger.info(`Aún hay ${activeRequests} solicitudes en curso, esperando...`, { client: name });
+            }
         }, 5000);
-
-        logger.info('Cliente eliminado exitosamente', { client: name });
-        res.status(200).json({ message: `Cliente con ID ${name} eliminado exitosamente.` });
     } catch (error) {
         logger.error('Error al eliminar cliente:', { error: error.message, client: name, stack: error.stack });
         res.status(500).json({ error: error.message });
