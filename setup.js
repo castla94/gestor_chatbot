@@ -131,7 +131,7 @@ app.post('/clientes/start', async (req, res) => {
     }
 });
 
-app.post('/clientes/stop', async (req, res) => {
+app.post('/clientes/reset', async (req, res) => {
     const { id, name } = req.body;
     logger.info('Solicitud de detención de cliente recibida', { id, name });
 
@@ -156,16 +156,16 @@ app.post('/clientes/stop', async (req, res) => {
             stdio: 'inherit'
         });
         logger.info('Guardando configuración de PM2');
-        execSync(`pm2 save --force`, {
-            stdio: 'inherit'
-        });
         logger.info('Eliminando sesiones del bot');
         execSync(`rm -rf bot_sessions`, { stdio: 'inherit' });
-
-        logger.info('Cliente detenido exitosamente', { client: name });
+        logger.info('Iniciando cliente con PM2', { pm2Name, clientPath });
+        execSync(`pm2 start ${pm2Name}`, {
+            stdio: 'inherit'
+        });
+        logger.info('Cliente reset exitosamente', { client: name });
         res.status(200).json({ message: `Cliente ${name} detenido PM2` });
     } catch (error) {
-        logger.error('Error al detener cliente:', { error: error.message, client: name, stack: error.stack });
+        logger.error('Error al reset cliente:', { error: error.message, client: name, stack: error.stack });
         res.status(500).json({ error: error.message });
     }
 });
