@@ -96,13 +96,13 @@ app.post('/clientes/create', async (req, res) => {
     }
 });
 
-app.post('/clientes/start', async (req, res) => {
-    const { id, name } = req.body;
+app.post('/clientes/change-status', async (req, res) => {
+    const { id, name, command } = req.body;
     logger.info('Solicitud de inicio de cliente recibida', { id, name });
 
-    if (!id || !name) {
-        logger.warn('Faltan parámetros requeridos', { id, name });
-        return res.status(400).json({ error: 'Faltan parámetros (id, name)' });
+    if (!id || !name || !command) {
+        logger.warn('Faltan parámetros requeridos', { id, name,command });
+        return res.status(400).json({ error: 'Faltan parámetros (id, name,command)' });
     }
 
     const clientPath = path.join(clientsBasePath, `cliente_${id}`);
@@ -117,17 +117,13 @@ app.post('/clientes/start', async (req, res) => {
         const pm2Name = `bot-${name}`;
         logger.info('Iniciando cliente con PM2', { pm2Name, clientPath });
         process.chdir(clientPath);
-        execSync(`pm2 start app.js --name ${pm2Name}`, {
+        execSync(`pm2 ${command} ${pm2Name}`, {
             stdio: 'inherit'
         });
-        logger.info('Guardando configuración de PM2');
-        execSync(`pm2 save --force`, {
-            stdio: 'inherit'
-        });
-        logger.info('Cliente iniciado exitosamente', { client: name });
-        res.status(200).json({ message: `Cliente ${name} iniciado en PM2` });
+        logger.info('Cliente '+command+' exitosamente', { client: name });
+        res.status(200).json({ message: `Cliente ${name} ${command} en PM2` });
     } catch (error) {
-        logger.error('Error al iniciar cliente:', { error: error.message, client: name, stack: error.stack });
+        logger.error('Error al '+command+' cliente:', { error: error.message, client: name, stack: error.stack });
         res.status(500).json({ error: error.message });
     }
 });
