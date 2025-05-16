@@ -61,7 +61,7 @@ const cloneAndSetupBot = async (client, port) => {
     execSync(`rm -rf bot_sessions`, { stdio: 'inherit' });
 
     logger.info(`Iniciando bot con PM2`, { pm2Name });
-    execSync(`pm2 start app.js --name ${pm2Name}`, {
+    execSync(`pm2 start app.js --name ${pm2Name} --max-memory-restart=2G`, {
         stdio: 'inherit'
     });
     logger.info(`Guardando configuración de PM2`);
