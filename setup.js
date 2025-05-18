@@ -324,6 +324,21 @@ app.post('/clientes/bot-conextion', async (req, res) => {
 });
 
 
+
+app.post('/clientes/rebot-pm2-all', async (req, res) => {
+    logger.info('Iniciando Reboot de todos los clientes');
+    try {
+        execSync(`pm2 ls | grep 'bot-' | awk '{print $4}' | xargs -I {} pm2 stop {} `, { encoding: 'utf-8' });
+        execSync(`pm2 ls | grep 'bot-' | awk '{print $4}' | xargs -I {} pm2 start {} `, { encoding: 'utf-8' });
+        logger.info('Reboot exitoso');
+        res.status(200).json({ message: `Reboot exitoso` });
+    } catch (error) {
+        logger.error('Error Reboot', { error: error.message, client: name, stack: error.stack });
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 app.listen(serverPort, () => {
     logger.info(`Gestor de clientes corriendo en http://localhost:${serverPort}`);
 });
