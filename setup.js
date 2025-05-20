@@ -339,6 +339,22 @@ app.post('/clientes/rebot-pm2-all', async (req, res) => {
 });
 
 
+app.post('/clientes/reset-johana', async (req, res) => {
+    logger.info('Iniciando Reboot de bot-johannarubiocoppola');
+    try {
+        const clientPath = path.join(clientsBasePath, `cliente_johannarubiocoppola`);
+        process.chdir(clientPath);
+        execSync('pm2 delete bot-johannarubiocoppola', { stdio: 'inherit' });
+        execSync('pm2 start app.js --name=bot-johannarubiocoppola --max-memory-restart=3G', { stdio: 'inherit' });
+        logger.info('Reboot bot-johannarubiocoppola exitoso');
+        res.status(200).json({ message: `Reboot exitoso` });
+    } catch (error) {
+        logger.error('Error Reboot bot-johannarubiocoppola', { error: error.message, client: name, stack: error.stack });
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 app.listen(serverPort, () => {
     logger.info(`Gestor de clientes corriendo en http://localhost:${serverPort}`);
 });
