@@ -358,6 +358,29 @@ app.post('/clientes/reset-johana', async (req, res) => {
 });
 
 
+app.post('/clientes/pm2-max-memory', async (req, res) => {
+    logger.info('Iniciando Reboot de bot-johannarubiocoppola');
+    try {
+        const output = execSync("pm2 ls | grep 'bot-admin' | awk '{print $4}'", { encoding: 'utf-8' });
+        logger.info('PM2 bot processes:', { processes: output.trim().split('\n') });
+
+        const processes = output.trim().split('\n');
+        for (const process of processes) {
+            const processName = process.replace('bot-', '');
+            const clientPath = path.join(clientsBasePath, `cliente_${processName}`);
+            process.chdir(clientPath);
+            execSync(`bash ./start-pm2.sh bot-${processName}`, { stdio: 'inherit' });
+            logger.info(`Reboot ${process} completed`, { clientPath });
+        }
+       logger.info('Reboot all processes exitoso');
+        res.status(200).json({ message: `Reboot all processes exitoso` });
+    } catch (error) {
+        logger.error('Error Reboot all processes ', { error: error.message, client: name, stack: error.stack });
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 app.listen(serverPort, () => {
     logger.info(`Gestor de clientes corriendo en http://localhost:${serverPort}`);
 });
