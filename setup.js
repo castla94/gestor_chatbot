@@ -368,13 +368,15 @@ app.post('/clientes/pm2-max-memory', async (req, res) => {
         for (const process of processes) {
             logger.info(`Processing PM2 restart for process: ${process}`);
             let processName = process;
+            logger.info(`start replace process ${processName}`);
             processName = processName.replace('bot-', '');
+            logger.info(`finish replace process ${processName}`);
             const clientPath = path.join(clientsBasePath, `cliente_${processName}`);
-            logger.debug(`Changing directory to client path`, { clientPath });
+            logger.info(`Changing directory to client path ${clientPath}`);
             process.chdir(clientPath);
-            logger.info(`Executing start-pm2.sh script`, { process, clientPath });
+            logger.info(`Executing start-pm2.sh script ${process}`);
             execSync(`bash ./start-pm2.sh bot-${processName}`, { stdio: 'inherit' });
-            logger.debug(`PM2 restart completed for process`, { process });
+            logger.info(`PM2 restart completed for process ${process}`);
         }
        logger.info('pm2-max-memory all processes exitoso');
         res.status(200).json({ message: `pm2-max-memory all processes exitoso` });
