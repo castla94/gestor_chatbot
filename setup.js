@@ -367,7 +367,8 @@ app.post('/clientes/pm2-max-memory', async (req, res) => {
         const processes = output.trim().split('\n');
         for (const process of processes) {
             logger.info(`Processing PM2 restart for process: ${process}`);
-            const processName = process.replace('bot-', '');
+            let processName = process;
+            processName = processName.replace('bot-', '');
             const clientPath = path.join(clientsBasePath, `cliente_${processName}`);
             logger.debug(`Changing directory to client path`, { clientPath });
             process.chdir(clientPath);
