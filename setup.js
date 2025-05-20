@@ -359,23 +359,26 @@ app.post('/clientes/reset-johana', async (req, res) => {
 
 
 app.post('/clientes/pm2-max-memory', async (req, res) => {
-    logger.info('Iniciando Reboot de bot-johannarubiocoppola');
+    logger.info('Iniciando pm2-max-memory');
     try {
         const output = execSync("pm2 ls | grep 'bot-admin' | awk '{print $4}'", { encoding: 'utf-8' });
         logger.info('PM2 bot processes:', { processes: output.trim().split('\n') });
 
         const processes = output.trim().split('\n');
         for (const process of processes) {
+            logger.info(`Processing PM2 restart for process: ${process}`);
             const processName = process.replace('bot-', '');
             const clientPath = path.join(clientsBasePath, `cliente_${processName}`);
+            logger.debug(`Changing directory to client path`, { clientPath });
             process.chdir(clientPath);
+            logger.info(`Executing start-pm2.sh script`, { process, clientPath });
             execSync(`bash ./start-pm2.sh bot-${processName}`, { stdio: 'inherit' });
-            logger.info(`Reboot ${process} completed`, { clientPath });
+            logger.debug(`PM2 restart completed for process`, { process });
         }
-       logger.info('Reboot all processes exitoso');
-        res.status(200).json({ message: `Reboot all processes exitoso` });
+       logger.info('pm2-max-memory all processes exitoso');
+        res.status(200).json({ message: `pm2-max-memory all processes exitoso` });
     } catch (error) {
-        logger.error('Error Reboot all processes ', { error: error.message, client: name, stack: error.stack });
+        logger.error('Error pm2-max-memory all processes ', { error: error.message, client: name, stack: error.stack });
         res.status(500).json({ error: error.message });
     }
 });
