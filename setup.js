@@ -361,7 +361,7 @@ app.post('/clientes/reset-johana', async (req, res) => {
 app.post('/clientes/pm2-max-memory', async (req, res) => {
     logger.info('Iniciando pm2-max-memory');
     try {
-        const output = execSync("pm2 ls | grep 'bot-' | awk '{print $4}'", { encoding: 'utf-8' });
+        const output = execSync("pm2 ls | grep 'bot-admision' | awk '{print $4}'", { encoding: 'utf-8' });
         logger.info('PM2 bot processes:', { processes: output.trim().split('\n') });
 
         const processes = output.trim().split('\n');
@@ -372,11 +372,18 @@ app.post('/clientes/pm2-max-memory', async (req, res) => {
             processName = processName.replace('bot-', '');
             logger.info(`finish replace process ${processName}`);
             const clientPath = path.join(clientsBasePath, `cliente_${processName}`);
-            logger.info(`Changing directory to client path ${clientPath}`);
-            process.chdir(clientPath);
-            logger.info(`Executing start-pm2.sh script ${processItem}`);
-            execSync(`bash ./start-pm2.sh bot-${processName}`, { stdio: 'inherit' });
-            logger.info(`PM2 restart completed for process ${processItem}`);
+            // Check if start-pm2.sh exists before executing
+            if (fs.existsSync(path.join(clientPath, 'start-pm2.sh'))) {
+                logger.info('start-pm2.sh script found, proceeding with execution');
+                logger.info(`Changing directory to client path ${clientPath}`);
+                process.chdir(clientPath);
+                logger.info(`Executing start-pm2.sh script ${processItem}`);
+                execSync(`bash ./start-pm2.sh bot-${processName}`, { stdio: 'inherit' });
+                logger.info(`PM2 restart completed for process ${processItem}`);
+            } else {
+                logger.warn('start-pm2.sh script not found, skipping process', { clientPath });
+                continue;
+            }
         }
        logger.info('pm2-max-memory all processes exitoso');
         res.status(200).json({ message: `pm2-max-memory all processes exitoso` });
