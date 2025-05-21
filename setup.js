@@ -361,7 +361,7 @@ app.post('/clientes/reset-johana', async (req, res) => {
 app.post('/clientes/pm2-max-memory', async (req, res) => {
     logger.info('Iniciando pm2-max-memory');
     try {
-        const output = execSync("pm2 ls | grep 'bot-admin' | awk '{print $4}'", { encoding: 'utf-8' });
+        const output = execSync("pm2 ls | grep 'bot-' | awk '{print $4}'", { encoding: 'utf-8' });
         logger.info('PM2 bot processes:', { processes: output.trim().split('\n') });
 
         const processes = output.trim().split('\n');
