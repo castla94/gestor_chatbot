@@ -345,9 +345,23 @@ app.post('/clientes/reset-johana', async (req, res) => {
     
     try {
         const clientPath = path.join(clientsBasePath, 'cliente_johannarubiocoppola');
-        process.chdir(clientPath); // Cambiar al directorio del cliente
+        //process.chdir(clientPath); // Cambiar al directorio del cliente
 
-        execSync('/bin/bash -c ./start-pm2.sh', { stdio: 'inherit' });
+        const pm2 = spawn('pm2', [
+            'start', 'app.js',
+            '--name=bot-johannarubiocoppola',
+            '--max-memory-restart', '3G',
+            '--no-autorestart'
+          ], { cwd: clientPath });
+          
+          pm2.stdout.on('data', (data) => console.log(data.toString()));
+          pm2.stderr.on('data', (data) => console.error(data.toString()));
+          
+          pm2.on('close', (code) => {
+            console.log(`PM2 proceso terminado con código ${code}`);
+          });
+
+        //execSync('/bin/bash -c ./start-pm2.sh', { stdio: 'inherit' });
 /*
         execSync(`pm2 delete ${botName} || true`, { stdio: 'inherit' });
         execSync(`pm2 start ecosystem.config.js --only ${botName}`, { stdio: 'inherit' });
