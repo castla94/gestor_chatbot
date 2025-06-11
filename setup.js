@@ -342,44 +342,17 @@ app.post('/clientes/rebot-pm2-all', async (req, res) => {
 app.post('/clientes/reset-johana', async (req, res) => {
     const botName = 'bot-johannarubiocoppola';
     logger.info(`Iniciando Reboot de ${botName}`);
-
-    // Ruta del cliente donde está app.js
-    const clientPath = path.join(clientsBasePath, 'cliente_johannarubiocoppola');
-
-    // Función auxiliar para ejecutar comandos secuencialmente
-    function runSpawn(command, args, cwd) {
-        return new Promise((resolve, reject) => {
-            const proc = spawn(command, args, {
-                cwd,
-                shell: true,
-                stdio: 'inherit'
-            });
-
-            proc.on('close', (code) => {
-                if (code === 0) {
-                    resolve();
-                } else {
-                    reject(new Error(`Falló: ${command} ${args.join(' ')}, código: ${code}`));
-                }
-            });
-        });
-    }
-
+    
     try {
-        // 1. Eliminar proceso si existe
-        await runSpawn('pm2', ['delete', botName], clientPath);
+        const clientPath = path.join(clientsBasePath, 'cliente_johannarubiocoppola');
+        process.chdir(clientPath); // Cambiar al directorio del cliente
 
-        // 2. Iniciar proceso con configuración
-        await runSpawn('pm2', [
-            'start', 'app.js',
-            `--name=${botName}`,
-            '--max-memory-restart', '3G',
-            '--no-autorestart'
-        ], clientPath);
-
-        // 3. Guardar estado
-        await runSpawn('pm2', ['save'], clientPath);
-
+        execSync('/bin/bash -c ./start-pm2.sh', { stdio: 'inherit' });
+/*
+        execSync(`pm2 delete ${botName} || true`, { stdio: 'inherit' });
+        execSync(`pm2 start ecosystem.config.js --only ${botName}`, { stdio: 'inherit' });
+        execSync('pm2 save', { stdio: 'inherit' });
+*/
         logger.info(`Reboot ${botName} exitoso`);
         res.status(200).json({ message: `Reboot exitoso` });
     } catch (error) {
