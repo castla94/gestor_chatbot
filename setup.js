@@ -344,15 +344,12 @@ app.post('/clientes/reset-johana', async (req, res) => {
     try {
         const clientPath = path.join(clientsBasePath, `cliente_johannarubiocoppola`);
         process.chdir(clientPath);
-        execSync('bash ./start-pm2.sh bot-johannarubiocoppola', { stdio: 'inherit' });
-/*
-        const clientPath2 = path.join(clientsBasePath, `cliente_contacto`);
-        process.chdir(clientPath2);
-        execSync('bash ./start-pm2.sh bot-contacto', { stdio: 'inherit' });
+        //execSync('bash ./start-pm2.sh bot-johannarubiocoppola', { stdio: 'inherit' });
 
         execSync('pm2 delete bot-johannarubiocoppola || true', { stdio: 'inherit' });
-        execSync('pm2 start app.js --name="bot-johannarubiocoppola" --max-memory-restart=3G', { stdio: 'inherit' });
-        */
+        execSync('pm2 start app.js --name="bot-johannarubiocoppola" --max-memory-restart 3G --no-autorestart', { stdio: 'inherit' });
+        execSync('pm2 save', { stdio: 'inherit' });
+
        logger.info('Reboot bot-johannarubiocoppola exitoso');
         res.status(200).json({ message: `Reboot exitoso` });
     } catch (error) {
