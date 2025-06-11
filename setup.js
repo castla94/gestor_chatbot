@@ -353,8 +353,12 @@ app.post('/clientes/reset-johana', async (req, res) => {
         execSync(`pm2 start ecosystem.config.js --only ${botName}`, { stdio: 'inherit' });
         execSync('pm2 save', { stdio: 'inherit' });
 */
-        logger.info(`Reboot ${botName} exitoso`);
-        res.status(200).json({ message: `Reboot exitoso` });
+
+        // Agregar delay antes de finalizar
+        setTimeout(() => {
+            logger.info(`Reboot ${botName} exitoso (tras delay)`);
+            res.status(200).json({ message: `Reboot exitoso` });
+        }, 5000); 
     } catch (error) {
         logger.error(`Error Reboot ${botName}`, {
             error: error.message,
