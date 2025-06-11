@@ -340,23 +340,28 @@ app.post('/clientes/rebot-pm2-all', async (req, res) => {
 
 
 app.post('/clientes/reset-johana', async (req, res) => {
-    logger.info('Iniciando Reboot de bot-johannarubiocoppola');
+    const botName = 'bot-johannarubiocoppola';
+    logger.info(`Iniciando Reboot de ${botName}`);
+    
     try {
-        const clientPath = path.join(clientsBasePath, `cliente_johannarubiocoppola`);
-        process.chdir(clientPath);
-        //execSync('bash ./start-pm2.sh bot-johannarubiocoppola', { stdio: 'inherit' });
+        const clientPath = path.join(clientsBasePath, 'cliente_johannarubiocoppola');
+        process.chdir(clientPath); // Cambiar al directorio del cliente
 
-        execSync('pm2 delete bot-johannarubiocoppola || true', { stdio: 'inherit' });
-        execSync('pm2 start app.js --name="bot-johannarubiocoppola" --max-memory-restart 3G --no-autorestart', { stdio: 'inherit' });
+        execSync(`pm2 delete ${botName} || true`, { stdio: 'inherit' });
+        execSync(`pm2 start ecosystem.config.js --only ${botName}`, { stdio: 'inherit' });
         execSync('pm2 save', { stdio: 'inherit' });
 
-       logger.info('Reboot bot-johannarubiocoppola exitoso');
+        logger.info(`Reboot ${botName} exitoso`);
         res.status(200).json({ message: `Reboot exitoso` });
     } catch (error) {
-        logger.error('Error Reboot bot-johannarubiocoppola', { error: error.message, client: name, stack: error.stack });
+        logger.error(`Error Reboot ${botName}`, {
+            error: error.message,
+            stack: error.stack
+        });
         res.status(500).json({ error: error.message });
     }
 });
+
 
 
 app.post('/clientes/pm2-max-memory', async (req, res) => {
