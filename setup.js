@@ -347,10 +347,12 @@ app.post('/clientes/reset-johana', async (req, res) => {
         const clientPath = path.join(clientsBasePath, 'cliente_johannarubiocoppola');
         process.chdir(clientPath); // Cambiar al directorio del cliente
 
+        execSync('/bin/bash -c ./start-pm2.sh', { stdio: 'inherit' });
+/*
         execSync(`pm2 delete ${botName} || true`, { stdio: 'inherit' });
         execSync(`pm2 start ecosystem.config.js --only ${botName}`, { stdio: 'inherit' });
         execSync('pm2 save', { stdio: 'inherit' });
-
+*/
         logger.info(`Reboot ${botName} exitoso`);
         res.status(200).json({ message: `Reboot exitoso` });
     } catch (error) {
