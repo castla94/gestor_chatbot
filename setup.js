@@ -159,7 +159,7 @@ app.post('/clientes/reset', async (req, res) => {
         execSync(`pm2 start app.js --name=${pm2Name} --max-memory-restart=2G`, {
             stdio: 'inherit'
         });
-        execSync(`pm2 start app.js ${pm2Name} `, {
+        execSync(`pm2 start ${pm2Name} `, {
             stdio: 'inherit'
         });
         logger.info('Cliente reset exitosamente', { client: name });
