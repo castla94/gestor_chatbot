@@ -156,7 +156,10 @@ app.post('/clientes/reset', async (req, res) => {
         logger.info('Eliminando sesiones del bot');
         execSync(`rm -rf bot_sessions`, { stdio: 'inherit' });
         logger.info('Iniciando cliente con PM2', { pm2Name, clientPath });
-        execSync(`pm2 start app.js --name=${pm2Name} --max-memory-restart=4G --no-autorestart`, {
+        execSync(`pm2 start app.js --name=${pm2Name} --max-memory-restart=2G`, {
+            stdio: 'inherit'
+        });
+        execSync(`pm2 start app.js ${pm2Name} `, {
             stdio: 'inherit'
         });
         logger.info('Cliente reset exitosamente', { client: name });
