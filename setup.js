@@ -49,7 +49,7 @@ const cloneAndSetupBot = async (client, port) => {
 
     updateEnvVariable('PORT', port);
     updateEnvVariable('EMAIL_TOKEN', client.email);
-    
+
     fs.writeFileSync(envPath, envContent);
     logger.info(`Variables de entorno actualizadas exitosamente`);
 
@@ -61,11 +61,12 @@ const cloneAndSetupBot = async (client, port) => {
     execSync(`rm -rf bot_sessions`, { stdio: 'inherit' });
 
     logger.info(`Iniciando bot con PM2`, { pm2Name });
-    execSync(`pm2 start app.js --name ${pm2Name} --max-memory-restart=2G`, {
+    execSync(`/opt/bitnami/node/bin/pm2 start app.js --name=${pm2Name} --interpreter=/home/bitnami/.nvm/versions/node/v22.21.1/bin/node --max-memory-restart=2G`, {
+        cwd: clientPath,
         stdio: 'inherit'
     });
     logger.info(`Guardando configuración de PM2`);
-    execSync(`pm2 save --force`, {
+    execSync(`/opt/bitnami/node/bin/pm2 save --force`, {
         stdio: 'inherit'
     });
     logger.info(`Configuración del bot completada exitosamente`, { client: client.name, port });
@@ -101,7 +102,7 @@ app.post('/clientes/change-status', async (req, res) => {
     logger.info('Solicitud de inicio de cliente recibida', { id, name });
 
     if (!id || !name || !command) {
-        logger.warn('Faltan parámetros requeridos', { id, name,command });
+        logger.warn('Faltan parámetros requeridos', { id, name, command });
         return res.status(400).json({ error: 'Faltan parámetros (id, name,command)' });
     }
 
@@ -120,10 +121,10 @@ app.post('/clientes/change-status', async (req, res) => {
         execSync(`pm2 ${command} ${pm2Name}`, {
             stdio: 'inherit'
         });
-        logger.info('Cliente '+command+' exitosamente', { client: name });
+        logger.info('Cliente ' + command + ' exitosamente', { client: name });
         res.status(200).json({ message: `Cliente ${name} ${command} en PM2` });
     } catch (error) {
-        logger.error('Error al '+command+' cliente:', { error: error.message, client: name, stack: error.stack });
+        logger.error('Error al ' + command + ' cliente:', { error: error.message, client: name, stack: error.stack });
         res.status(500).json({ error: error.message });
     }
 });
@@ -149,7 +150,7 @@ app.post('/clientes/reset', async (req, res) => {
     process.chdir(clientPath);
 
     try {
-        
+
         execSync(`pm2 delete ${pm2Name}`, {
             stdio: 'inherit'
         });
@@ -157,18 +158,19 @@ app.post('/clientes/reset', async (req, res) => {
         logger.info('Eliminando sesiones del bot');
         execSync(`rm -rf bot_sessions`, { stdio: 'inherit' });
         logger.info('Iniciando cliente con PM2', { pm2Name, clientPath });
-        execSync(`pm2 start app.js --name=${pm2Name} --interpreter=/home/bitnami/.nvm/versions/node/v22.21.1/bin/node --max-memory-restart=2G`, {
+        execSync(`/opt/bitnami/node/bin/pm2 start app.js --name=${pm2Name} --interpreter=/home/bitnami/.nvm/versions/node/v22.21.1/bin/node --max-memory-restart=2G`, {
+            cwd: clientPath,
             stdio: 'inherit'
         });
         logger.info('Cliente reset exitosamente', { client: name });
         res.status(200).json({ message: `Cliente ${name} reset exitosamente.` });
     } catch (error) {
         logger.error('Error al reset cliente:', { error: error.message, client: name, stack: error.stack });
-        if(error.message.includes('Command failed: pm2 delete ')){
+        if (error.message.includes('Command failed: pm2 delete ')) {
             logger.info('Cliente no estaba en PM2, se recrea');
             execSync(`/opt/bitnami/node/bin/pm2 start app.js --name=${pm2Name} --interpreter=/home/bitnami/.nvm/versions/node/v22.21.1/bin/node --max-memory-restart=2G`, {
-            cwd: clientPath,
-            stdio: 'inherit'
+                cwd: clientPath,
+                stdio: 'inherit'
             });
             logger.info('Cliente reset exitosamente', { client: name });
             res.status(200).json({ message: `Cliente ${name} reset exitosamente.` });
@@ -323,11 +325,11 @@ app.post('/clientes/bot-conextion', async (req, res) => {
             logger.warn('No bot_sessions directory found or empty');
         }
 
-        logger.info('Cliente status conexion', { 
-            client: name, 
+        logger.info('Cliente status conexion', {
+            client: name,
             sessionStatus: (sessionCount > 1 ? 'Conectado' : 'Desconectado'),
         });
-        res.status(200).json({ message: `Cliente ${name} status conexion`,sessionStatus: (sessionCount > 1 ? 'Conectado' : 'Desconectado') });
+        res.status(200).json({ message: `Cliente ${name} status conexion`, sessionStatus: (sessionCount > 1 ? 'Conectado' : 'Desconectado') });
     } catch (error) {
         logger.error('Error status conexion cliente:', { error: error.message, client: name, stack: error.stack });
         res.status(500).json({ error: error.message });
@@ -353,23 +355,23 @@ app.post('/clientes/rebot-pm2-all', async (req, res) => {
 app.post('/clientes/reset-johana', async (req, res) => {
     const botName = 'bot-johannarubiocoppola';
     logger.info(`Iniciando Reboot de ${botName}`);
-    
+
     try {
         const clientPath = path.join(clientsBasePath, 'cliente_johannarubiocoppola');
         process.chdir(clientPath); // Cambiar al directorio del cliente
 
         execSync('/bin/bash -c ./start-pm2.sh', { stdio: 'inherit' });
-/*
-        execSync(`pm2 delete ${botName} || true`, { stdio: 'inherit' });
-        execSync(`pm2 start ecosystem.config.js --only ${botName}`, { stdio: 'inherit' });
-        execSync('pm2 save', { stdio: 'inherit' });
-*/
+        /*
+                execSync(`pm2 delete ${botName} || true`, { stdio: 'inherit' });
+                execSync(`pm2 start ecosystem.config.js --only ${botName}`, { stdio: 'inherit' });
+                execSync('pm2 save', { stdio: 'inherit' });
+        */
 
         // Agregar delay antes de finalizar
         setTimeout(() => {
             logger.info(`Reboot ${botName} exitoso (tras delay)`);
             res.status(200).json({ message: `Reboot exitoso` });
-        }, 5000); 
+        }, 5000);
     } catch (error) {
         logger.error(`Error Reboot ${botName}`, {
             error: error.message,
@@ -408,7 +410,7 @@ app.post('/clientes/pm2-max-memory', async (req, res) => {
                 continue;
             }
         }
-       logger.info('pm2-max-memory all processes exitoso');
+        logger.info('pm2-max-memory all processes exitoso');
         res.status(200).json({ message: `pm2-max-memory all processes exitoso` });
     } catch (error) {
         logger.error('Error pm2-max-memory all processes ', { error: error.message, client: name, stack: error.stack });
