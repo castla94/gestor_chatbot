@@ -149,18 +149,18 @@ app.post('/clientes/reset', async (req, res) => {
         const pm2Name = `bot-${name}`;
         logger.info('Deteniendo cliente con PM2', { pm2Name, clientPath });
         process.chdir(clientPath);
-        execSync(`pm2 stop ${pm2Name}`, {
+        execSync(`pm2 delete ${pm2Name}`, {
             stdio: 'inherit'
         });
         logger.info('Guardando configuración de PM2');
         logger.info('Eliminando sesiones del bot');
         execSync(`rm -rf bot_sessions`, { stdio: 'inherit' });
         logger.info('Iniciando cliente con PM2', { pm2Name, clientPath });
-        execSync(`pm2 start ${pm2Name}`, {
+        execSync(`pm2 start app.js --name ${pm2Name} --max-memory-restart=4G --no-autorestart`, {
             stdio: 'inherit'
         });
         logger.info('Cliente reset exitosamente', { client: name });
-        res.status(200).json({ message: `Cliente ${name} detenido PM2` });
+        res.status(200).json({ message: `Cliente ${name} reset exitosamente.` });
     } catch (error) {
         logger.error('Error al reset cliente:', { error: error.message, client: name, stack: error.stack });
         res.status(500).json({ error: error.message });
