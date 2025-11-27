@@ -147,7 +147,7 @@ app.post('/clientes/reset', async (req, res) => {
     const pm2Name = `bot-${name}`;
     logger.info('Deteniendo cliente con PM2', { pm2Name, clientPath });
     process.chdir(clientPath);
-    
+
     try {
         
         execSync(`pm2 delete ${pm2Name}`, {
@@ -157,7 +157,7 @@ app.post('/clientes/reset', async (req, res) => {
         logger.info('Eliminando sesiones del bot');
         execSync(`rm -rf bot_sessions`, { stdio: 'inherit' });
         logger.info('Iniciando cliente con PM2', { pm2Name, clientPath });
-        execSync(`pm2 start app.js --name=${pm2Name} --max-memory-restart=2G`, {
+        execSync(`pm2 start app.js --name=${pm2Name} --interpreter=/home/bitnami/.nvm/versions/node/v22.21.1/bin/node --max-memory-restart=2G`, {
             stdio: 'inherit'
         });
         logger.info('Cliente reset exitosamente', { client: name });
