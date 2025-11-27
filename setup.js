@@ -144,11 +144,12 @@ app.post('/clientes/reset', async (req, res) => {
         logger.warn('Carpeta del cliente no encontrada', { clientPath });
         return res.status(404).json({ error: `Cliente ${name} no encontrado.` });
     }
-
+    const pm2Name = `bot-${name}`;
+    logger.info('Deteniendo cliente con PM2', { pm2Name, clientPath });
+    process.chdir(clientPath);
+    
     try {
-        const pm2Name = `bot-${name}`;
-        logger.info('Deteniendo cliente con PM2', { pm2Name, clientPath });
-        process.chdir(clientPath);
+        
         execSync(`pm2 delete ${pm2Name}`, {
             stdio: 'inherit'
         });
@@ -163,6 +164,15 @@ app.post('/clientes/reset', async (req, res) => {
         res.status(200).json({ message: `Cliente ${name} reset exitosamente.` });
     } catch (error) {
         logger.error('Error al reset cliente:', { error: error.message, client: name, stack: error.stack });
+        if(error.message.includes('Command failed: pm2 delete ')){
+            logger.info('Cliente no estaba en PM2, se recrea');
+            execSync(`pm2 start app.js --name=${pm2Name} --max-memory-restart=2G`, {
+            stdio: 'inherit'
+            });
+            logger.info('Cliente reset exitosamente', { client: name });
+            res.status(200).json({ message: `Cliente ${name} reset exitosamente.` });
+
+        }
         res.status(500).json({ error: error.message });
     }
 });
