@@ -166,7 +166,8 @@ app.post('/clientes/reset', async (req, res) => {
         logger.error('Error al reset cliente:', { error: error.message, client: name, stack: error.stack });
         if(error.message.includes('Command failed: pm2 delete ')){
             logger.info('Cliente no estaba en PM2, se recrea');
-            execSync(`pm2 start app.js --name=${pm2Name} --max-memory-restart=2G`, {
+            execSync(`/opt/bitnami/node/bin/pm2 start app.js --name=${pm2Name} --interpreter=/home/bitnami/.nvm/versions/node/v22.21.1/bin/node --max-memory-restart=2G`, {
+            cwd: clientPath,
             stdio: 'inherit'
             });
             logger.info('Cliente reset exitosamente', { client: name });
