@@ -1,0 +1,294 @@
+{
+  "info": {
+    "name": "Gestor Chatbot API",
+    "_postman_id": "b2d7d89b-1e5d-4bc6-96de-0f413c1c031b",
+    "description": "Colección Postman para los endpoints expuestos en setup.js del gestor de clientes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "protocol",
+      "value": "http"
+    },
+    {
+      "key": "host",
+      "value": "localhost"
+    },
+    {
+      "key": "serverPort",
+      "value": "4000"
+    },
+    {
+      "key": "clientId",
+      "value": "demo001"
+    },
+    {
+      "key": "clientName",
+      "value": "cliente-demo"
+    },
+    {
+      "key": "clientEmail",
+      "value": "cliente-demo@example.com"
+    },
+    {
+      "key": "clientPort",
+      "value": "4010"
+    },
+    {
+      "key": "pm2Command",
+      "value": "restart"
+    },
+    {
+      "key": "appName",
+      "value": "bot-cliente-demo"
+    }
+  ],
+  "item": [
+    {
+      "name": "Crear cliente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"{{clientId}}\",\n  \"name\": \"{{clientName}}\",\n  \"email\": \"{{clientEmail}}\",\n  \"port\": \"{{clientPort}}\"\n}"
+        },
+        "url": {
+          "raw": "{{protocol}}://{{host}}:{{serverPort}}/clientes/create",
+          "protocol": "{{protocol}}",
+          "host": [
+            "{{host}}"
+          ],
+          "port": "{{serverPort}}",
+          "path": [
+            "clientes",
+            "create"
+          ]
+        },
+        "description": "Crea la carpeta del cliente, actualiza el archivo .env e inicia el bot en PM2."
+      }
+    },
+    {
+      "name": "Cambiar estado cliente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"{{clientId}}\",\n  \"name\": \"{{clientName}}\",\n  \"command\": \"{{pm2Command}}\"\n}"
+        },
+        "url": {
+          "raw": "{{protocol}}://{{host}}:{{serverPort}}/clientes/change-status",
+          "protocol": "{{protocol}}",
+          "host": [
+            "{{host}}"
+          ],
+          "port": "{{serverPort}}",
+          "path": [
+            "clientes",
+            "change-status"
+          ]
+        },
+        "description": "Ejecuta un comando PM2 sobre el proceso bot-{{clientName}}."
+      }
+    },
+    {
+      "name": "Reset cliente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"{{clientId}}\",\n  \"name\": \"{{clientName}}\"\n}"
+        },
+        "url": {
+          "raw": "{{protocol}}://{{host}}:{{serverPort}}/clientes/reset",
+          "protocol": "{{protocol}}",
+          "host": [
+            "{{host}}"
+          ],
+          "port": "{{serverPort}}",
+          "path": [
+            "clientes",
+            "reset"
+          ]
+        },
+        "description": "Elimina la sesión del bot y lo vuelve a levantar en PM2."
+      }
+    },
+    {
+      "name": "Eliminar cliente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{clientName}}\"\n}"
+        },
+        "url": {
+          "raw": "{{protocol}}://{{host}}:{{serverPort}}/clientes/delete",
+          "protocol": "{{protocol}}",
+          "host": [
+            "{{host}}"
+          ],
+          "port": "{{serverPort}}",
+          "path": [
+            "clientes",
+            "delete"
+          ]
+        },
+        "description": "Borra el proceso de PM2 y elimina el directorio del cliente."
+      }
+    },
+    {
+      "name": "Listar estado de clientes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{protocol}}://{{host}}:{{serverPort}}/clientes/status",
+          "protocol": "{{protocol}}",
+          "host": [
+            "{{host}}"
+          ],
+          "port": "{{serverPort}}",
+          "path": [
+            "clientes",
+            "status"
+          ]
+        },
+        "description": "Devuelve el estado actual de los procesos gestionados por PM2."
+      }
+    },
+    {
+      "name": "Obtener logs de aplicación",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{protocol}}://{{host}}:{{serverPort}}/clientes/logs/{{appName}}",
+          "protocol": "{{protocol}}",
+          "host": [
+            "{{host}}"
+          ],
+          "port": "{{serverPort}}",
+          "path": [
+            "clientes",
+            "logs",
+            "{{appName}}"
+          ]
+        },
+        "description": "Abre un stream temporal de logs de PM2 para la aplicación indicada."
+      }
+    },
+    {
+      "name": "Validar conexión bot",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"{{clientId}}\",\n  \"name\": \"{{clientName}}\"\n}"
+        },
+        "url": {
+          "raw": "{{protocol}}://{{host}}:{{serverPort}}/clientes/bot-conextion",
+          "protocol": "{{protocol}}",
+          "host": [
+            "{{host}}"
+          ],
+          "port": "{{serverPort}}",
+          "path": [
+            "clientes",
+            "bot-conextion"
+          ]
+        },
+        "description": "Consulta si el bot tiene sesión activa según el contenido de bot_sessions."
+      }
+    },
+    {
+      "name": "Reiniciar todos los bots",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{protocol}}://{{host}}:{{serverPort}}/clientes/rebot-pm2-all",
+          "protocol": "{{protocol}}",
+          "host": [
+            "{{host}}"
+          ],
+          "port": "{{serverPort}}",
+          "path": [
+            "clientes",
+            "rebot-pm2-all"
+          ]
+        },
+        "description": "Detiene y vuelve a iniciar todos los procesos PM2 cuyo nombre empiece por bot-."
+      }
+    },
+    {
+      "name": "Reset Johana",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{protocol}}://{{host}}:{{serverPort}}/clientes/reset-johana",
+          "protocol": "{{protocol}}",
+          "host": [
+            "{{host}}"
+          ],
+          "port": "{{serverPort}}",
+          "path": [
+            "clientes",
+            "reset-johana"
+          ]
+        },
+        "description": "Ejecuta el reinicio especial del bot johannarubiocoppola."
+      }
+    },
+    {
+      "name": "Ajustar PM2 max memory",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{protocol}}://{{host}}:{{serverPort}}/clientes/pm2-max-memory",
+          "protocol": "{{protocol}}",
+          "host": [
+            "{{host}}"
+          ],
+          "port": "{{serverPort}}",
+          "path": [
+            "clientes",
+            "pm2-max-memory"
+          ]
+        },
+        "description": "Ejecuta start-pm2.sh en cada cliente que tenga el script disponible."
+      }
+    }
+  ]
+}

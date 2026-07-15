@@ -319,7 +319,7 @@ app.post('/clientes/bot-conextion', async (req, res) => {
         // Check if bot_sessions directory exists and count sessions
         let sessionCount = 0;
         try {
-            sessionCount = parseInt(execSync('ls -1 bot_sessions/ | wc -l', { encoding: 'utf-8' }).trim());
+            sessionCount = parseInt(execSync('ls -1 bot_sessions/* | wc -l', { encoding: 'utf-8' }).trim());
             logger.info('Number of files:', { sessionCount });
         } catch (error) {
             logger.warn('No bot_sessions directory found or empty');
