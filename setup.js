@@ -327,9 +327,9 @@ app.post('/clientes/bot-conextion', async (req, res) => {
 
         logger.info('Cliente status conexion', {
             client: name,
-            sessionStatus: (sessionCount > 39 ? 'Conectado' : 'Desconectado'),
+            sessionStatus: (sessionCount > 41 ? 'Conectado' : 'Desconectado'),
         });
-        res.status(200).json({ message: `Cliente ${name} status conexion`, sessionStatus: (sessionCount > 39 ? 'Conectado' : 'Desconectado') });
+        res.status(200).json({ message: `Cliente ${name} status conexion`, sessionStatus: (sessionCount > 41 ? 'Conectado' : 'Desconectado') });
     } catch (error) {
         logger.error('Error status conexion cliente:', { error: error.message, client: name, stack: error.stack });
         res.status(500).json({ error: error.message });
