@@ -10,13 +10,18 @@ const serverPort = 4000; // Puerto donde correrá el servidor de gestión
 let activeRequests = 0
 
 const projectTemplatePath = path.join(__dirname, '..', 'chat-bot-whatsapp');
+const projectTemplates = {
+    'chat-bot-whatsapp': projectTemplatePath,
+    'chat-bot-whatsapp-wpp': path.join(__dirname, '..', 'chat-bot-whatsapp-wpp')
+};
 const clientsBasePath = path.join(__dirname, '..', 'clientes_chatbot');
 
 // Middleware para parsear el cuerpo de la petición (JSON)
 app.use(express.json());
 
 // Función para crear un nuevo cliente
-const cloneAndSetupBot = async (client, port) => {
+const cloneAndSetupBot = async (client, port, template = 'chat-bot-whatsapp') => {
+    const selectedTemplatePath = projectTemplates[template];
     const clientPath = path.join(clientsBasePath, `cliente_${client.id}`);
 
     // Verificar si la carpeta ya existe
@@ -25,8 +30,8 @@ const cloneAndSetupBot = async (client, port) => {
         throw new Error(`La carpeta para ${client.name} ya existe.`);
     }
 
-    logger.info(`Clonando plantilla a la carpeta del cliente`, { from: projectTemplatePath, to: clientPath });
-    execSync(`rsync -a ${projectTemplatePath}/ ${clientPath}/`);
+    logger.info(`Clonando plantilla a la carpeta del cliente`, { from: selectedTemplatePath, to: clientPath });
+    execSync(`rsync -a ${selectedTemplatePath}/ ${clientPath}/`);
 
     const envPath = path.join(clientPath, '.env');
     logger.info(`Configurando variables de entorno`, { envPath });
@@ -77,18 +82,22 @@ const cloneAndSetupBot = async (client, port) => {
 };
 
 app.post('/clientes/create', async (req, res) => {
-    const { id, name, email, port } = req.body;
-    logger.info('Solicitud de creación de cliente recibida', { id, name, email, port });
+    const { id, name, email, port, template = 'chat-bot-whatsapp' } = req.body;
+    logger.info('Solicitud de creación de cliente recibida', { id, name, email, port, template });
 
     if (!id || !name || !email || !port) {
         logger.warn('Faltan parámetros requeridos', { id, name, email, port });
         return res.status(400).json({ error: 'Faltan parámetros (id, name, email, port)' });
     }
 
+    if (typeof template !== 'string' || !Object.prototype.hasOwnProperty.call(projectTemplates, template)) {
+        return res.status(400).json({ error: 'Plantilla inválida. Use chat-bot-whatsapp o chat-bot-whatsapp-wpp' });
+    }
+
     try {
         const client = { id, name, email };
         logger.info('Iniciando proceso de creación del cliente', { client });
-        await cloneAndSetupBot(client, port);
+        await cloneAndSetupBot(client, port, template);
         logger.info('Cliente creado exitosamente', { client: name, port });
         res.status(200).json({ message: `Cliente ${name} creado e iniciado en el puerto ${port}` });
     } catch (error) {
