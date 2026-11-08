@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
 const { execSync, spawn } = require('child_process');
 const { defaultLogger: logger } = require('./logger'); // Import logger from separate file
 require('dotenv').config();
@@ -15,6 +16,42 @@ const projectTemplates = {
     'chat-bot-whatsapp-wpp': path.join(__dirname, '..', 'chat-bot-whatsapp-wpp')
 };
 const clientsBasePath = path.join(__dirname, '..', 'clientes_chatbot');
+
+// Identifica también clientes WPP creados antes de agregar la selección de plantilla.
+const isWppClient = (clientPath) => {
+    const packagePath = path.join(clientPath, 'package.json');
+    return fs.existsSync(packagePath) &&
+        JSON.parse(fs.readFileSync(packagePath, 'utf-8')).name === 'chat-bot-whatsapp-wpp';
+};
+
+const botEntryPoint = (clientPath) => isWppClient(clientPath) ? 'src/index.js' : 'app.js';
+
+const getWppConnection = (clientPath) => {
+    const envPath = path.join(clientPath, '.env');
+    const env = fs.existsSync(envPath) ? require('dotenv').parse(fs.readFileSync(envPath)) : {};
+    const port = Number(env.API_PORT ?? (Number(env.PORT || 3000) + 10000));
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+        throw new Error('Puerto API de WPPConnect inválido en .env');
+    }
+    return new Promise((resolve) => {
+        const request = http.get({ hostname: '127.0.0.1', port, path: '/health', timeout: 3000 }, (response) => {
+            let body = '';
+            response.setEncoding('utf8');
+            response.on('data', (chunk) => { body += chunk; });
+            response.on('error', () => resolve(false));
+            response.on('end', () => {
+                try {
+                    const health = JSON.parse(body);
+                    resolve(response.statusCode === 200 && health.provider === 'wppconnect' && health.ready === true);
+                } catch {
+                    resolve(false);
+                }
+            });
+        });
+        request.on('timeout', () => request.destroy());
+        request.on('error', () => resolve(false));
+    });
+};
 
 // Middleware para parsear el cuerpo de la petición (JSON)
 app.use(express.json());
@@ -66,7 +103,7 @@ const cloneAndSetupBot = async (client, port, template = 'chat-bot-whatsapp') =>
     execSync(`rm -rf bot_sessions`, { stdio: 'inherit' });
 
     logger.info(`Iniciando bot con PM2`, { pm2Name });
-    execSync(`/opt/bitnami/node/bin/pm2 start app.js --name=${pm2Name} --interpreter=/home/bitnami/.nvm/versions/node/v22.21.1/bin/node --max-memory-restart=2G`, {
+    execSync(`/opt/bitnami/node/bin/pm2 start ${botEntryPoint(clientPath)} --name=${pm2Name} --interpreter=/home/bitnami/.nvm/versions/node/v22.21.1/bin/node --max-memory-restart=2G`, {
         cwd: clientPath,
         stdio: 'inherit'
     });
@@ -167,7 +204,7 @@ app.post('/clientes/reset', async (req, res) => {
         logger.info('Eliminando sesiones del bot');
         execSync(`rm -rf bot_sessions`, { stdio: 'inherit' });
         logger.info('Iniciando cliente con PM2', { pm2Name, clientPath });
-        execSync(`/opt/bitnami/node/bin/pm2 start app.js --name=${pm2Name} --interpreter=/home/bitnami/.nvm/versions/node/v22.21.1/bin/node --max-memory-restart=2G`, {
+        execSync(`/opt/bitnami/node/bin/pm2 start ${botEntryPoint(clientPath)} --name=${pm2Name} --interpreter=/home/bitnami/.nvm/versions/node/v22.21.1/bin/node --max-memory-restart=2G`, {
             cwd: clientPath,
             stdio: 'inherit'
         });
@@ -177,7 +214,7 @@ app.post('/clientes/reset', async (req, res) => {
         logger.error('Error al reset cliente:', { error: error.message, client: name, stack: error.stack });
         if (error.message.includes('Command failed: pm2 delete ')) {
             logger.info('Cliente no estaba en PM2, se recrea');
-            execSync(`/opt/bitnami/node/bin/pm2 start app.js --name=${pm2Name} --interpreter=/home/bitnami/.nvm/versions/node/v22.21.1/bin/node --max-memory-restart=2G`, {
+            execSync(`/opt/bitnami/node/bin/pm2 start ${botEntryPoint(clientPath)} --name=${pm2Name} --interpreter=/home/bitnami/.nvm/versions/node/v22.21.1/bin/node --max-memory-restart=2G`, {
                 cwd: clientPath,
                 stdio: 'inherit'
             });
@@ -324,21 +361,28 @@ app.post('/clientes/bot-conextion', async (req, res) => {
     }
 
     try {
-        process.chdir(clientPath);
-        // Check if bot_sessions directory exists and count sessions
-        let sessionCount = 0;
-        try {
-            sessionCount = parseInt(execSync('ls -1 bot_sessions/* | wc -l', { encoding: 'utf-8' }).trim());
+        let connected;
+        if (isWppClient(clientPath)) {
+            connected = await getWppConnection(clientPath);
+        } else {
+            const sessionsPath = path.join(clientPath, 'bot_sessions');
+            let sessionCount = 0;
+            try {
+                const entries = fs.readdirSync(sessionsPath, { withFileTypes: true });
+                for (const entry of entries.filter(entry => !entry.name.startsWith('.'))) {
+                    sessionCount += entry.isDirectory()
+                        ? fs.readdirSync(path.join(sessionsPath, entry.name)).length
+                        : 1;
+                }
+            } catch (error) {
+                if (error.code !== 'ENOENT') throw error;
+            }
             logger.info('Number of files:', { sessionCount });
-        } catch (error) {
-            logger.warn('No bot_sessions directory found or empty');
+            connected = sessionCount > 41;
         }
-
-        logger.info('Cliente status conexion', {
-            client: name,
-            sessionStatus: (sessionCount > 41 ? 'Conectado' : 'Desconectado'),
-        });
-        res.status(200).json({ message: `Cliente ${name} status conexion`, sessionStatus: (sessionCount > 41 ? 'Conectado' : 'Desconectado') });
+        const sessionStatus = connected ? 'Conectado' : 'Desconectado';
+        logger.info('Cliente status conexion', { client: name, sessionStatus });
+        res.status(200).json({ message: `Cliente ${name} status conexion`, sessionStatus });
     } catch (error) {
         logger.error('Error status conexion cliente:', { error: error.message, client: name, stack: error.stack });
         res.status(500).json({ error: error.message });
